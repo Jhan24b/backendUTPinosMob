@@ -1,1 +1,9 @@
+# Archivos y carpetas generales
+node_modules
 .env
+.DS_Store
+
+# Logs y cachés
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
