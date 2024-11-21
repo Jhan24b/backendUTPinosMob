@@ -34,6 +34,8 @@ app.post("/auth/google", async (req, res) => {
       where: { email },
     });
 
+    console.log("Usuario en bd:", usuario)
+
     // Si no existe, registrar un nuevo usuario
     if (!usuario) {
       usuario = await prisma.usuario.create({
@@ -167,6 +169,7 @@ app.get("/api/tramites/:id/details", async (req, res) => {
 
 // Endpoint para subir archivos a S3
 app.post("/api/upload", upload.single("file"), async (req, res) => {
+  console.log("Archivo recibido:", req.file);
   try {
     // Validar que el archivo exista
     if (!req.file) {
