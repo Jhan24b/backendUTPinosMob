@@ -177,7 +177,9 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
     }
 
     // Generar un nombre único para el archivo
-    const fileName = `${crypto.randomUUID()}${path.extname(req.file.originalname)}`;
+    // const fileName = `${crypto.randomUUID()}${path.extname(req.file.originalname)}`;
+    const fileName = `${Date.now()}${path.extname(req.file.originalname)}`;
+
 
     // Configuración del archivo a subir
     const params = {
@@ -197,7 +199,7 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
     res.status(200).json({ message: "Archivo subido correctamente", fileUrl });
   } catch (error) {
     console.error("Error al subir archivo a S3:", error);
-    res.status(500).json({ error: "Error al subir el archivo." });
+    res.status(500).json({ error: "Error al subir el archivo." + error });
   }
 });
 
