@@ -268,7 +268,7 @@ app.post('/api/registrar-solicitud', async (req, res) => {
 
     res.status(201).json(solicitud);
   } catch (error) {
-    console.error('Error registrando solicitud:', error.message);
+    console.error('Error registrando solicitud:', error);
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
 });
