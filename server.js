@@ -203,6 +203,76 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
   }
 });
 
+// Obtener tipos de servicios
+app.get('/api/tipos-servicios', async (req, res) => {
+  try {
+    const tipos = await prisma.servicios.groupBy({
+      by: ['tipo'],
+    });
+
+    if (!tipos.length) {
+      return res.status(404).json({ error: 'No se encontraron tipos de servicios.' });
+    }
+
+    res.json(tipos.map((t) => t.tipo));
+  } catch (error) {
+    console.error('Error obteniendo tipos de servicios:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// Obtener servicios según tipo
+app.get('/api/servicios/:tipo', async (req, res) => {
+  const { tipo } = req.params;
+
+  if (!tipo) {
+    return res.status(400).json({ error: 'El tipo de servicio es obligatorio.' });
+  }
+
+  try {
+    const servicios = await prisma.servicios.findMany({
+      where: { tipo },
+    });
+
+    if (!servicios.length) {
+      return res.status(404).json({ error: 'No se encontraron servicios para este tipo.' });
+    }
+
+    res.json(servicios);
+  } catch (error) {
+    console.error('Error obteniendo servicios:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// Registrar solicitud de servicio
+app.post('/api/registrar-solicitud', async (req, res) => {
+  const { idUsuario, idServicio, horarioElegido, estado } = req.body;
+
+  if (!idUsuario || !idServicio || !horarioElegido) {
+    return res.status(400).json({
+      error: 'Los campos "idUsuario", "idServicio" y "horarioElegido" son obligatorios.',
+    });
+  }
+
+  try {
+    const solicitud = await prisma.serviciosUtilizados.create({
+      data: {
+        idUsuario,
+        idServicio,
+        horarioElegido: new Date(horarioElegido),
+        estado: estado || 'pendiente',
+        fechaRegistro: new Date(),
+      },
+    });
+
+    res.status(201).json(solicitud);
+  } catch (error) {
+    console.error('Error registrando solicitud:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
 // Inicializar el servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
