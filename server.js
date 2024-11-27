@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const express = require("express");
 const multer = require("multer");
+const cors = require('cors');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 require("dotenv").config();
 
@@ -8,7 +9,7 @@ const prisma = new PrismaClient();
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
-
+app.use(cors());
 app.use(express.json());
 
 // Configuración del cliente de S3
