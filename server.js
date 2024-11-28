@@ -213,7 +213,9 @@ app.get('/api/tipos-servicios', async (req, res) => {
   }
 });
 
-
+app.get('/test', (req, res) => {
+  res.json({ message: 'El servidor está funcionando' });
+});
 
 // Obtener servicios según tipo
 app.get('/api/servicios/:tipo', async (req, res) => {
