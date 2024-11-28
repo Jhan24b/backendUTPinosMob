@@ -35,8 +35,6 @@ app.post("/auth/google", async (req, res) => {
       where: { email },
     });
 
-    console.log("Usuario en bd:", usuario)
-
     // Si no existe, registrar un nuevo usuario
     if (!usuario) {
       usuario = await prisma.usuario.create({
@@ -227,7 +225,7 @@ app.get('/api/servicios/:tipo', async (req, res) => {
   const { tipo } = req.params;
 
   if (!tipo) {
-    return res.status(400).json({ error: 'El tipo de servicio es obligatorio.' });
+    return res.status(400).json({ error: 'El tipo de servicio es obligatorio.' });  
   }
 
   try {
