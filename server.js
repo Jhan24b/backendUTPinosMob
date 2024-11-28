@@ -205,20 +205,25 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
 // Obtener tipos de servicios
 app.get('/api/tipos-servicios', async (req, res) => {
   try {
-    const tipos = await prisma.servicios.groupBy({
-      by: ['tipo'],
+    // Obtener todos los registros de la colección 'servicios'
+    const servicios = await prisma.servicios.findMany({
+      select: { tipo: true }, // Solo selecciona la columna 'tipo'
     });
 
-    if (!tipos.length) {
+    if (!servicios.length) {
       return res.status(404).json({ error: 'No se encontraron tipos de servicios.' });
     }
 
-    res.json(tipos.map((t) => t.tipo));
+    // Agrupa los tipos únicos
+    const tiposUnicos = [...new Set(servicios.map((s) => s.tipo))];
+
+    res.json(tiposUnicos);
   } catch (error) {
     console.error('Error obteniendo tipos de servicios:', error.message);
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
 });
+
 
 // Obtener servicios según tipo
 app.get('/api/servicios/:tipo', async (req, res) => {
