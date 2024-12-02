@@ -128,11 +128,6 @@ app.post("/api/registrar-tramite", async (req, res) => {
   }
 });
 
-// Manejo global de errores para rutas no definidas
-app.use((req, res) => {
-  res.status(404).json({ error: "Ruta no encontrada." });
-});
-
 // Endpoint: Obtener detalles de un trámite por ID
 app.get("/api/tramites/:id/details", async (req, res) => {
   const { id } = req.params;
@@ -267,6 +262,11 @@ app.post('/api/registrar-solicitud', async (req, res) => {
     console.error('Error registrando solicitud:', error);
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
+});
+
+// Manejo global de errores para rutas no definidas
+app.use((req, res) => {
+  res.status(404).json({ error: "Ruta no encontrada." });
 });
 
 // Inicializar el servidor
