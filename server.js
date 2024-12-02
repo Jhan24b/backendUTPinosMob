@@ -199,9 +199,20 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
 
 // Obtener tipos de servicios
 app.get('/api/tipos-servicios', async (req, res) => {
-  console.log("1");
   try {
-    res.json(['Eventos', 'Recursos', 'Refuerzo Academico']); 
+    // Recuperar todos los servicios y sus tipos
+    const servicios = await prisma.servicios.findMany({
+      select: { tipo: true }, // Obtener solo el campo 'tipo'
+    });
+
+    if (!servicios || servicios.length === 0) {
+      return res.status(404).json({ error: 'No se encontraron tipos de servicios.' });
+    }
+
+    // Extraer los tipos únicos
+    const tiposUnicos = [...new Set(servicios.map((s) => s.tipo))];
+
+    res.json(tiposUnicos);
   } catch (error) {
     console.error('Error obteniendo tipos de servicios:', error.message);
     res.status(500).json({ error: 'Error interno del servidor.' });
@@ -216,17 +227,14 @@ app.get('/test', (req, res) => {
 app.get('/api/servicios/:tipo', async (req, res) => {
   const { tipo } = req.params;
 
-  if (!tipo) {
-    return res.status(400).json({ error: 'El tipo de servicio es obligatorio.' });  
-  }
-
   try {
     const servicios = await prisma.servicios.findMany({
       where: { tipo },
+      select: { id: true, nombre: true, tipo: true },
     });
 
     if (!servicios.length) {
-      return res.status(404).json({ error: 'No se encontraron servicios para este tipo.' });
+      return res.status(404).json({ error: 'No se encontraron servicios.' });
     }
 
     res.json(servicios);
@@ -240,14 +248,8 @@ app.get('/api/servicios/:tipo', async (req, res) => {
 app.post('/api/registrar-solicitud', async (req, res) => {
   const { idUsuario, idServicio, horarioElegido, estado } = req.body;
 
-  if (!idUsuario || !idServicio || !horarioElegido) {
-    return res.status(400).json({
-      error: 'Los campos "idUsuario", "idServicio" y "horarioElegido" son obligatorios.',
-    });
-  }
-
   try {
-    const solicitud = await prisma.serviciosUtilizados.create({
+    const nuevaSolicitud = await prisma.serviciosUtilizados.create({
       data: {
         idUsuario,
         idServicio,
@@ -257,12 +259,13 @@ app.post('/api/registrar-solicitud', async (req, res) => {
       },
     });
 
-    res.status(201).json(solicitud);
+    res.status(201).json(nuevaSolicitud);
   } catch (error) {
-    console.error('Error registrando solicitud:', error);
+    console.error('Error registrando solicitud:', error.message);
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
 });
+
 
 // Manejo global de errores para rutas no definidas
 app.use((req, res) => {

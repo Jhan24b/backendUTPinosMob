@@ -80,13 +80,13 @@ model Pagos {
   periodoMatriculadoId String?             @db.ObjectId
 }
 
-model Servicios {
-  id                  String                @id @default(auto()) @map("_id") @db.ObjectId
-  nombre              String
-  tipo                String
-  fechas              DateTime[]
-  ServiciosUtilizados ServiciosUtilizados[]
-}
+  model Servicios {
+    id                  String                @id @default(auto()) @map("_id") @db.ObjectId
+    nombre              String
+    tipo                String
+    fechas              DateTime[]
+    ServiciosUtilizados ServiciosUtilizados[]
+  }
 
 model Tramites {
   id                 String               @id @default(auto()) @map("_id") @db.ObjectId
