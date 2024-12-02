@@ -254,7 +254,7 @@ app.post('/api/registrar-solicitud', async (req, res) => {
         idUsuario,
         idServicio,
         horarioElegido: new Date(horarioElegido),
-        estado: estado || 'pendiente',
+        estado: estado || 'Registrado',
         fechaRegistro: new Date(),
       },
     });
