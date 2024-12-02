@@ -266,6 +266,47 @@ app.post('/api/registrar-solicitud', async (req, res) => {
   }
 });
 
+app.get('/api/cursos-matriculados/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'El ID del usuario es obligatorio.' });
+  }
+
+  try {
+    const cursosMatriculados = await prisma.cursoMatriculado.findMany({
+      where: { idUsuario: userId },
+      include: {
+        curso: true,
+        notas: true,
+      },
+    });
+
+    if (!cursosMatriculados.length) {
+      return res.status(404).json({ error: 'No se encontraron cursos matriculados.' });
+    }
+
+    const formattedData = cursosMatriculados.map((cursoMatriculado) => ({
+      id: cursoMatriculado.id,
+      nombre: cursoMatriculado.curso.nombre,
+      profesor: cursoMatriculado.profesor,
+      salon: cursoMatriculado.salon,
+      diasClase: cursoMatriculado.diasClase,
+      horaInicio: cursoMatriculado.horaInicio,
+      notas: cursoMatriculado.notas.map((nota) => ({
+        nombre: nota.nombre,
+        calificacion: nota.calificacion,
+        peso: nota.peso,
+      })),
+      promedio: cursoMatriculado.averageGrade,
+    }));
+
+    res.json(formattedData);
+  } catch (error) {
+    console.error('Error obteniendo cursos matriculados:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
 
 // Manejo global de errores para rutas no definidas
 app.use((req, res) => {
