@@ -266,47 +266,72 @@ app.post('/api/registrar-solicitud', async (req, res) => {
   }
 });
 
-app.get('/api/cursos-matriculados/:userId', async (req, res) => {
-  const { userId } = req.params;
+app.get('/api/cursos-matriculados/:userId/:semestre', async (req, res) => {
+  const { userId, semestre } = req.params;
 
-  if (!userId) {
-    return res.status(400).json({ error: 'El ID del usuario es obligatorio.' });
+  if (!userId || !semestre) {
+    return res.status(400).json({
+      error: 'El ID del usuario y el semestre son obligatorios.',
+    });
   }
 
   try {
     const cursosMatriculados = await prisma.cursoMatriculado.findMany({
-      where: { idUsuario: userId },
+      where: {
+        PeriodoMatriculado: {
+          semestre: parseInt(semestre, 10), // Asegúrate de convertir el semestre a número
+          Usuario: { id: userId }, // Verifica la relación con el usuario
+        },
+      },
       include: {
-        curso: true,
-        notas: true,
+        curso: true, // Incluye información del curso (nombre, créditos, etc.)
+        PeriodoMatriculado: true, // Incluye información del periodo matriculado
+        notas: true, // Incluye las notas asociadas
       },
     });
 
     if (!cursosMatriculados.length) {
-      return res.status(404).json({ error: 'No se encontraron cursos matriculados.' });
+      return res.status(404).json({
+        error: 'No se encontraron cursos matriculados para el usuario y semestre especificados.',
+      });
     }
 
+    // Formatear los datos para enviarlos al frontend
     const formattedData = cursosMatriculados.map((cursoMatriculado) => ({
       id: cursoMatriculado.id,
-      nombre: cursoMatriculado.curso.nombre,
+      curso: {
+        id: cursoMatriculado.curso.id,
+        nombre: cursoMatriculado.curso.nombre,
+        creditos: cursoMatriculado.curso.creditos,
+        horas: cursoMatriculado.curso.horas,
+        semestre: cursoMatriculado.curso.semestre,
+      },
       profesor: cursoMatriculado.profesor,
       salon: cursoMatriculado.salon,
+      promedio: cursoMatriculado.averageGrade,
       diasClase: cursoMatriculado.diasClase,
       horaInicio: cursoMatriculado.horaInicio,
       notas: cursoMatriculado.notas.map((nota) => ({
+        id: nota.id,
         nombre: nota.nombre,
         calificacion: nota.calificacion,
         peso: nota.peso,
       })),
-      promedio: cursoMatriculado.averageGrade,
+      periodo: {
+        semestre: cursoMatriculado.PeriodoMatriculado.semestre,
+        periodo: cursoMatriculado.PeriodoMatriculado.periodo,
+      },
     }));
 
     res.json(formattedData);
   } catch (error) {
-    console.error('Error obteniendo cursos matriculados:', error);
-    res.status(500).json({ error: 'Error interno del servidor.' });
+    console.error('Error obteniendo cursos matriculados:', error.message);
+    res.status(500).json({
+      error: 'Error interno del servidor.',
+    });
   }
 });
+
 
 // Manejo global de errores para rutas no definidas
 app.use((req, res) => {
