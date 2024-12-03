@@ -333,6 +333,59 @@ app.get('/api/cursos-matriculados/:userId/:semestre', async (req, res) => {
 });
 
 
+app.get('/api/horario/:userId/:semestre', async (req, res) => {
+  const { userId, semestre } = req.params;
+
+  if (!userId || !semestre) {
+    return res.status(400).json({
+      error: 'El ID del usuario y el semestre son obligatorios.',
+    });
+  }
+
+  try {
+    const cursosMatriculados = await prisma.cursoMatriculado.findMany({
+      where: {
+        PeriodoMatriculado: {
+          semestre: parseInt(semestre, 10),
+          Usuario: { id: userId },
+        },
+      },
+      include: {
+        curso: true,
+        PeriodoMatriculado: true,
+      },
+    });
+
+    if (!cursosMatriculados.length) {
+      return res.status(404).json({
+        error: 'No se encontraron cursos matriculados para el usuario y semestre especificados.',
+      });
+    }
+
+    // Formatear datos agrupados por día
+    const horario = cursosMatriculados.reduce((acc, curso) => {
+      curso.diasClase.forEach((dia) => {
+        if (!acc[dia]) acc[dia] = [];
+        acc[dia].push({
+          curso: curso.curso.nombre,
+          profesor: curso.profesor,
+          salon: curso.salon,
+          horaInicio: curso.horaInicio, // Se envía como `ISO 8601` para fácil formateo en el frontend
+        });
+      });
+      return acc;
+    }, {});
+
+    res.json(horario);
+  } catch (error) {
+    console.error('Error obteniendo horario:', error.message);
+    res.status(500).json({
+      error: 'Error interno del servidor.',
+    });
+  }
+});
+
+
 // Manejo global de errores para rutas no definidas
 app.use((req, res) => {
   res.status(404).json({ error: "Ruta no encontrada." });
