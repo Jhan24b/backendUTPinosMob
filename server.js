@@ -394,7 +394,6 @@ app.get('/api/pagos/:userId', async (req, res) => {
   }
 
   try {
-    // Buscar pagos por usuario y ordenarlos cronológicamente
     const pagos = await prisma.pagos.findMany({
       where: { usuarioId: userId },
       orderBy: { fechaVencimiento: 'asc' },
@@ -404,13 +403,20 @@ app.get('/api/pagos/:userId', async (req, res) => {
       return res.status(404).json({ error: 'No se encontraron pagos para este usuario.' });
     }
 
-    // Agrupar los pagos por tipo
+    // Agrupamos los pagos por tipo
     const pagosAgrupados = pagos.reduce((result, pago) => {
       const { tipo } = pago;
       if (!result[tipo]) {
         result[tipo] = [];
       }
-      result[tipo].push(pago);
+      result[tipo].push({
+        id: pago.id,
+        descripcion: pago.descripcion,
+        monto: pago.monto,
+        fechaVencimiento: pago.fechaVencimiento,
+        estado: pago.estado,
+        urlRecibo: pago.urlRecibo,
+      });
       return result;
     }, {});
 
