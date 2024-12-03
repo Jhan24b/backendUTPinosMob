@@ -386,6 +386,42 @@ app.get('/api/horario/:userId/:semestre', async (req, res) => {
 });
 
 
+app.get('/api/pagos/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'El ID del usuario es obligatorio.' });
+  }
+
+  try {
+    // Buscar pagos por usuario y ordenarlos cronológicamente
+    const pagos = await prisma.pagos.findMany({
+      where: { usuarioId: userId },
+      orderBy: { fechaVencimiento: 'asc' },
+    });
+
+    if (!pagos.length) {
+      return res.status(404).json({ error: 'No se encontraron pagos para este usuario.' });
+    }
+
+    // Agrupar los pagos por tipo
+    const pagosAgrupados = pagos.reduce((result, pago) => {
+      const { tipo } = pago;
+      if (!result[tipo]) {
+        result[tipo] = [];
+      }
+      result[tipo].push(pago);
+      return result;
+    }, {});
+
+    res.json(pagosAgrupados);
+  } catch (error) {
+    console.error('Error obteniendo pagos:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+
 // Manejo global de errores para rutas no definidas
 app.use((req, res) => {
   res.status(404).json({ error: "Ruta no encontrada." });
